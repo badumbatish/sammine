@@ -33,7 +33,11 @@ public:
         End,
         Unexpected,
     };
+private:
+    Kind             m_kind{};
+    std::string_view m_lexeme{};
 
+public:
     Token(Kind kind) noexcept : m_kind{kind} {}
 
     Token(Kind kind, const char* beg, std::size_t len) noexcept
@@ -62,10 +66,6 @@ public:
     void lexeme(std::string_view lexeme) noexcept {
         m_lexeme = std::move(lexeme);
     }
-
-private:
-    Kind             m_kind{};
-    std::string_view m_lexeme{};
 };
 
 class Lexer {
@@ -187,7 +187,7 @@ bool is_identifier_char(char c) noexcept {
     }
 }
 
-Token Lexer::atom(Token::Kind kind) noexcept { return Token(kind, m_beg++, 1); }
+Token Lexer::atom(Token::Kind kind) noexcept { return {kind, m_beg++, 1}; }
 
 Token Lexer::next() noexcept {
     while (is_space(peek())) get();
@@ -353,29 +353,29 @@ std::ostream& operator<<(std::ostream& os, const Token::Kind& kind) {
     return os << names[static_cast<int>(kind)];
 }
 
-int main() {
-    auto code =
-            "x = 2\n"
-            "// This is a comment.\n"
-            "var x\n"
-            "var y\n"
-            "var f = function(x, y) { sin(x) * sin(y) + x * y; }\n"
-            "der(f, x)\n"
-            "var g = function(x, y) { 2 * (x + der(f, y)); } // der(f, y) is a "
-            "matrix\n"
-            "var r{3}; // Vector of three elements\n"
-            "var J{12, 12}; // Matrix of 12x12 elements\n"
-            "var dot = function(u{:}, v{:}) -> scalar {\n"
-            "          return u[i] * v[i]; // Einstein notation\n"
-            "}\n"
-            "var norm = function(u{:}) -> scalar { return sqrt(dot(u, u)); }\n"
-            "<end>";
-
-    Lexer lex(code);
-    for (auto token = lex.next();
-         not token.is_one_of(Token::Kind::End, Token::Kind::Unexpected);
-         token = lex.next()) {
-        std::cout << std::setw(12) << token.kind() << " |" << token.lexeme()
-                  << "|\n";
-    }
-}
+//int main() {
+//    auto code =
+//            "x = 2\n"
+//            "// This is a comment.\n"
+//            "var x\n"
+//            "var y\n"
+//            "var f = function(x, y) { sin(x) * sin(y) + x * y; }\n"
+//            "der(f, x)\n"
+//            "var g = function(x, y) { 2 * (x + der(f, y)); } // der(f, y) is a "
+//            "matrix\n"
+//            "var r{3}; // Vector of three elements\n"
+//            "var J{12, 12}; // Matrix of 12x12 elements\n"
+//            "var dot = function(u{:}, v{:}) -> scalar {\n"
+//            "          return u[i] * v[i]; // Einstein notation\n"
+//            "}\n"
+//            "var norm = function(u{:}) -> scalar { return sqrt(dot(u, u)); }\n"
+//            "<end>";
+//
+//    Lexer lex(code);
+//    for (auto token = lex.next();
+//         not token.is_one_of(Token::Kind::End, Token::Kind::Unexpected);
+//         token = lex.next()) {
+//        std::cout << std::setw(12) << token.kind() << " |" << token.lexeme()
+//                  << "|\n";
+//    }
+//}
