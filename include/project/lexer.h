@@ -2,72 +2,7 @@
 // Created by Jasmine Tang on 10/3/23.
 //
 #include <string>
-
-class Token {
-public:
-    enum class Kind {
-        Number,
-        Identifier,
-        LeftParen,
-        RightParen,
-        LeftSquare,
-        RightSquare,
-        LeftCurly,
-        RightCurly,
-        LessThan,
-        GreaterThan,
-        Equal,
-        Plus,
-        Minus,
-        Asterisk,
-        Slash,
-        Hash,
-        Dot,
-        Comma,
-        Colon,
-        Semicolon,
-        SingleQuote,
-        DoubleQuote,
-        Comment,
-        Pipe,
-        End,
-        Unexpected,
-    };
-private:
-    Kind             m_kind{};
-    std::string_view m_lexeme{};
-
-public:
-    Token(Kind kind) noexcept : m_kind{kind} {}
-
-    Token(Kind kind, const char* beg, std::size_t len) noexcept
-            : m_kind{kind}, m_lexeme(beg, len) {}
-
-    Token(Kind kind, const char* beg, const char* end) noexcept
-            : m_kind{kind}, m_lexeme(beg, std::distance(beg, end)) {}
-
-    Kind kind() const noexcept { return m_kind; }
-
-    void kind(Kind kind) noexcept { m_kind = kind; }
-
-    bool is(Kind kind) const noexcept { return m_kind == kind; }
-
-    bool is_not(Kind kind) const noexcept { return m_kind != kind; }
-
-    bool is_one_of(Kind k1, Kind k2) const noexcept { return is(k1) || is(k2); }
-
-    template <typename... Ts>
-    bool is_one_of(Kind k1, Kind k2, Ts... ks) const noexcept {
-        return is(k1) || is_one_of(k2, ks...);
-    }
-
-    std::string_view lexeme() const noexcept { return m_lexeme; }
-
-    void lexeme(std::string_view lexeme) noexcept {
-        m_lexeme = std::move(lexeme);
-    }
-};
-
+#include "token.h"
 class Lexer {
 public:
     Lexer(const char* beg) noexcept : m_beg{beg} {}
@@ -78,6 +13,7 @@ private:
     Token identifier() noexcept;
     Token number() noexcept;
     Token slash_or_comment() noexcept;
+    Token pipe_or_or() noexcept;
     Token atom(Token::Kind) noexcept;
 
     char peek() const noexcept { return *m_beg; }
@@ -115,6 +51,7 @@ bool is_digit(char c) noexcept {
             return false;
     }
 }
+
 
 bool is_identifier_char(char c) noexcept {
     switch (c) {
@@ -302,7 +239,7 @@ Token Lexer::next() noexcept {
         case '"':
             return atom(Token::Kind::DoubleQuote);
         case '|':
-            return atom(Token::Kind::Pipe);
+            return pipe_or_or();
     }
 }
 
@@ -338,6 +275,18 @@ Token Lexer::slash_or_comment() noexcept {
     }
 }
 
+Token Lexer::pipe_or_or() noexcept {
+    const char* start = m_beg;
+    get();
+
+    if (peek() == '|') {
+        get();
+        start = m_beg;
+        return {Token::Kind::Or, m_beg, 1};
+    } else {
+        return {Token::Kind::Pipe, start, 1};
+    }
+}
 #include <iomanip>
 #include <iostream>
 
